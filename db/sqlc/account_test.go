@@ -2,16 +2,20 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"strconv"
 	"testing"
+	"time"
 
+	"github.com/nadamalash/bank-backend/util"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateAccount(t *testing.T) {
+func createRandomAccount(t *testing.T) Account {
 	arg := CreateAccountParams{
-		Owner:    "nada",
-		Balance:  "100.00",
-		Currency: "USD",
+		Owner:    util.RandomOwner(),
+		Balance:  strconv.FormatFloat(util.RandomMoney(), 'f', 2, 64),
+		Currency: util.RandomCurrency(),
 	}
 	account, err := testQueries.CreateAccount(context.Background(), arg)
 	require.NoError(t, err)
@@ -24,4 +28,76 @@ func TestCreateAccount(t *testing.T) {
 	require.NotZero(t, account.ID)
 	require.NotZero(t, account.CreatedAt)
 
+	return account
+
+}
+
+func TestCreateAccount(t *testing.T) {
+	createRandomAccount(t)
+}
+
+func TestGetAccount(t *testing.T) {
+	account1 := createRandomAccount(t)
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, account2)
+
+	require.Equal(t, account1.ID, account2.ID)
+	require.Equal(t, account1.Owner, account2.Owner)
+	require.Equal(t, account1.Balance, account2.Balance)
+	require.Equal(t, account1.Currency, account2.Currency)
+	require.WithinDuration(t, account1.CreatedAt.Time, account2.CreatedAt.Time, time.Second)
+}
+
+func TestUpdateAccount(t *testing.T) {
+	account1 := createRandomAccount(t)
+
+	arg := UpdateAccountParams{
+		ID:      account1.ID,
+		Balance: strconv.FormatFloat(util.RandomMoney(), 'f', 2, 64),
+	}
+
+	account2, err := testQueries.UpdateAccount(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, account2)
+
+	require.Equal(t, account1.ID, account2.ID)
+	require.Equal(t, account1.Owner, account2.Owner)
+	require.Equal(t, arg.Balance, account2.Balance)
+	require.Equal(t, account1.Currency, account2.Currency)
+	require.WithinDuration(t, account1.CreatedAt.Time, account2.CreatedAt.Time, time.Second)
+}
+
+func TestDeleteAccount(t *testing.T) {
+	account1 := createRandomAccount(t)
+	err := testQueries.DeleteAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+	require.Error(t, err)
+	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.Empty(t, account2)
+}
+
+func TestListAccounts(t *testing.T) {
+	// Create 10 random accounts
+	var lastAccount Account
+	for i := 0; i < 10; i++ {
+		lastAccount = createRandomAccount(t)
+	}
+	// Create a new account with the same owner as the last account
+	arg := ListAccountsParams{
+		Owner:  lastAccount.Owner, // Use the same owner as the last account
+		Limit:  5,
+		Offset: 0,
+	}
+	// Get the list of accounts, which should include the last account
+	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, accounts)
+
+	for _, account := range accounts {
+		require.NotEmpty(t, account)
+		require.Equal(t, lastAccount.Owner, account.Owner)
+	}
 }

@@ -36,9 +36,15 @@ func RandomOwner() string {
 	return RandomString(6)
 }
 
-// RandomMoney generates a random amount of money
-func RandomMoney() int64 {
-	return RandomInt(0, 1000)
+// RandomMoney generates a random amount of money as a float with 2 decimal places
+func RandomMoney() float64 {
+	// Generate a random integer between 0 and 100000 (representing cents)
+	amountInCents := RandomInt(0, 100000)
+
+	// Convert cents to dollars with 2 decimal places
+	amountInDollars := float64(amountInCents) / 100.0
+
+	return amountInDollars
 }
 
 // RandomCurrency generates a random currency code
