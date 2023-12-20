@@ -14,7 +14,7 @@ WHERE id = $1 LIMIT 1;
 -- name: GetAccountForUpdate :one
 SELECT * FROM accounts
 WHERE id = $1 LIMIT 1
-FOR NO KEY UPDATE;
+FOR NO KEY UPDATE; -- This command is used in PostgreSQL to lock the selected rows against concurrent updates.
 
 -- name: ListAccounts :many
 SELECT * FROM accounts

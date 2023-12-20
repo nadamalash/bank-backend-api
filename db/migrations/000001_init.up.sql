@@ -1,34 +1,42 @@
--- Create the Accounts table
-CREATE TABLE Accounts (
-    id SERIAL PRIMARY KEY,
-    owner VARCHAR(255) NOT NULL,
-    balance DECIMAL(15, 2) NOT NULL,
-    currency VARCHAR(3) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "accounts" (
+  "id" bigserial PRIMARY KEY,
+  "owner" varchar NOT NULL,
+  "balance" bigint NOT NULL,
+  "currency" varchar NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
--- Index on owner for faster retrieval
-CREATE INDEX idx_owner ON Accounts(owner);
-
--- Create the Entries table
-CREATE TABLE Entries (
-    id SERIAL PRIMARY KEY,
-    account_id INTEGER REFERENCES Accounts(id) ON DELETE CASCADE,
-    amount DECIMAL(15, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "entries" (
+  "id" bigserial PRIMARY KEY,
+  "account_id" bigint NOT NULL,
+  "amount" bigint NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
--- Index on account_id for faster retrieval
-CREATE INDEX idx_account_id ON Entries(account_id);
-
--- Create the Transfers table
-CREATE TABLE Transfers (
-    id SERIAL PRIMARY KEY,
-    from_account_id INTEGER REFERENCES Accounts(id) ON DELETE CASCADE,
-    to_account_id INTEGER REFERENCES Accounts(id) ON DELETE CASCADE,
-    amount DECIMAL(15, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "transfers" (
+  "id" bigserial PRIMARY KEY,
+  "from_account_id" bigint NOT NULL,
+  "to_account_id" bigint NOT NULL,
+  "amount" bigint NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
--- Index on from_account_id and to_account_id for faster retrieval
-CREATE INDEX idx_transfer_accounts ON Transfers(from_account_id, to_account_id);
+ALTER TABLE "entries" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");
+
+ALTER TABLE "transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts" ("id");
+
+ALTER TABLE "transfers" ADD FOREIGN KEY ("to_account_id") REFERENCES "accounts" ("id");
+
+CREATE INDEX ON "accounts" ("owner");
+
+CREATE INDEX ON "entries" ("account_id");
+
+CREATE INDEX ON "transfers" ("from_account_id");
+
+CREATE INDEX ON "transfers" ("to_account_id");
+
+CREATE INDEX ON "transfers" ("from_account_id", "to_account_id");
+
+COMMENT ON COLUMN "entries"."amount" IS 'can be negative or positive';
+
+COMMENT ON COLUMN "transfers"."amount" IS 'must be positive';

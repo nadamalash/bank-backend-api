@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"strconv"
 	"testing"
 	"time"
 
@@ -13,9 +11,9 @@ import (
 
 func createRandomTransfer(t *testing.T, account1, account2 Account) Transfer {
 	arg := CreateTransferParams{
-		FromAccountID: sql.NullInt32{Int32: account1.ID, Valid: true},
-		ToAccountID:   sql.NullInt32{Int32: account2.ID, Valid: true},
-		Amount:        strconv.FormatFloat(util.RandomMoney(), 'f', 2, 64),
+		FromAccountID: account1.ID,
+		ToAccountID:   account2.ID,
+		Amount:        util.RandomMoney(),
 	}
 
 	transfer, err := testQueries.CreateTransfer(context.Background(), arg)
@@ -51,7 +49,7 @@ func TestGetTransfer(t *testing.T) {
 	require.Equal(t, transfer1.FromAccountID, transfer2.FromAccountID)
 	require.Equal(t, transfer1.ToAccountID, transfer2.ToAccountID)
 	require.Equal(t, transfer1.Amount, transfer2.Amount)
-	require.WithinDuration(t, transfer1.CreatedAt.Time, transfer2.CreatedAt.Time, time.Second)
+	require.WithinDuration(t, transfer1.CreatedAt, transfer2.CreatedAt, time.Second)
 }
 
 func TestListTransfer(t *testing.T) {
@@ -64,8 +62,8 @@ func TestListTransfer(t *testing.T) {
 	}
 
 	arg := ListTransfersParams{
-		FromAccountID: sql.NullInt32{Int32: account1.ID, Valid: true},
-		ToAccountID:   sql.NullInt32{Int32: account1.ID, Valid: true},
+		FromAccountID: account1.ID,
+		ToAccountID:   account1.ID,
 		Limit:         5,
 		Offset:        5,
 	}
@@ -76,6 +74,6 @@ func TestListTransfer(t *testing.T) {
 
 	for _, transfer := range transfers {
 		require.NotEmpty(t, transfer)
-		require.True(t, transfer.FromAccountID == sql.NullInt32{Int32: account1.ID, Valid: true} || transfer.ToAccountID == sql.NullInt32{Int32: account1.ID, Valid: true})
+		require.True(t, transfer.FromAccountID == account1.ID || transfer.ToAccountID == account1.ID)
 	}
 }
