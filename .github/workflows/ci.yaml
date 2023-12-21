@@ -32,15 +32,15 @@ jobs:
       uses: actions/setup-go@v4 # This uses the version 4 of the setup-go action
       with:                     # The with block sets the version of go to use
         go-version: '1.21.5'
-    - name: Set up Postgres
-      run: |
-        go get github.com/lib/pq
-        go get github.com/golang-migrate/migrate/v4
-        go get github.com/golang-migrate/migrate/v4/database/postgres
-        go get github.com/golang-migrate/migrate/v4/source/file
+    
+    - name: Install golang-migrate
+      run: |  # This installs the golang-migrate tool, | is used to write multiline commands, which migrate will print the path of the migrate tool
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate /usr/local/bin/migrate 
+        which migrate
 
-    - name: Migration
-      run: make migrateup
-          
+    - name: Make Migrations    # This sets up a postgres environment
+      run: make migrate-up
+
     - name: Test
       run: make test
