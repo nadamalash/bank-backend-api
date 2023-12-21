@@ -1,0 +1,46 @@
+# This workflow will Test a golang project
+
+name: ci-test # This name will be displayed in the Github Actions UI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  # This workflow contains a single job called "Test"
+  Test:
+    name: Test # The name of the job 
+    runs-on: ubuntu-latest      # This job will run on Ubuntu
+    
+    services:                   # This job will use a postgres database
+      postgres:
+        image: postgres:alpine
+        env:
+          POSTGRES_USER: nada
+          POSTGRES_PASSWORD: koty123
+          POSTGRES_DB: bank_db
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 # This will check if the database is ready
+    
+    steps:                      # The steps that will be executed in this job
+    - uses: actions/checkout@v3 # This checks out the code from the repo
+
+    - name: Set up Go           # This sets up a go environment
+      uses: actions/setup-go@v4 # This uses the version 4 of the setup-go action
+      with:                     # The with block sets the version of go to use
+        go-version: '1.21.5'
+    
+    - name: Install golang-migrate
+      run: |  # This installs the golang-migrate tool, | is used to write multiline commands, which migrate will print the path of the migrate tool
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate.linux-amd64 /usr/local/bin/migrate 
+        which migrate
+
+    - name: Make Migrations    # This sets up a postgres environment
+      run: make migrate-up
+
+    - name: Test
+      run: make test
