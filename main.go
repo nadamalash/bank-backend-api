@@ -7,23 +7,22 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/nadamalash/bank-backend/api"
 	db "github.com/nadamalash/bank-backend/db/sqlc"
-)
-
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgresql://nada:koty123@localhost:5432/bank_db?sslmode=disable"
-	serverAddress = "0.0.0.0:8080"
+	"github.com/nadamalash/bank-backend/util"
 )
 
 // Entry point to run the server
 func main() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig(".") // load config from the current directory
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err) //fatal error is a helper function to log the error and exit the program
 	}

@@ -7,20 +7,20 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://nada:koty123@localhost:5432/bank_db?sslmode=disable"
+	"github.com/nadamalash/bank-backend/util"
 )
 
 var testQueries *Queries
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	var err error
+
+	config, err := util.LoadConfig("../..") // load config from the current directory
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
 	// Connect to test database
-	testDB, err = sql.Open(dbDriver, dbSource)
+	testDB, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
