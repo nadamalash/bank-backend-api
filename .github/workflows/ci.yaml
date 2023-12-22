@@ -1,8 +1,7 @@
 # This workflow will Test a golang project
-
 name: ci-test # This name will be displayed in the Github Actions UI
 
-on:
+on: # This workflow will run on the following events
   push:
     branches: [ "master" ]
   pull_request:
